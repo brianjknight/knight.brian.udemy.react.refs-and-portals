@@ -7,40 +7,67 @@ export default function TimerChallenage({ title, targetTime }) {
   const timer = useRef(); // instance specific timer and NOT re-initialized
   const dialog = useRef();
 
-  const [timerStarted, setTimerStarted] = useState(false);
-  const [timerExpired, setTimeExpired] = useState(false);
+  // const [timerStarted, setTimerStarted] = useState(false);
+  // const [timerExpired, setTimeExpired] = useState(false);
 
   // let timer; // re-initializes when state changes
 
-  function handleStart() {
-    timer.current = setTimeout(() => {
-      setTimeExpired(true);
-      // dialog.current.showModal();
-      dialog.current.open(); // detached TimerChallenge from dialog component in ResultModal
-    }, targetTime * 1000);
+  // function handleStart() {
+  //   timer.current = setTimeout(() => {
+  //     setTimeExpired(true);
+  //     // dialog.current.showModal();
+  //     dialog.current.open(); // detached TimerChallenge ref from dialog component in ResultModal
+  //   }, targetTime * 1000);
 
-    setTimerStarted(true);
+  //   setTimerStarted(true);
+  // }
+  // function handleStop() {
+  //   clearTimeout(timer.current);
+  // }
+
+  const [timeRemaining, setTimeRemaining] = useState(targetTime * 1000);
+  const timerIsActive = timeRemaining > 0 && timeRemaining < targetTime * 1000;
+
+  if (timeRemaining <= 0) {
+    clearInterval(timer.current);
+    dialog.current.open();
+  }
+
+  function handleReset() {
+    setTimeRemaining(targetTime * 1000);
+  }
+
+  function handleStart() {
+    timer.current = setInterval(() => {
+      setTimeRemaining((prevTimeRemaining) => prevTimeRemaining - 10);
+    }, 10);
   }
 
   function handleStop() {
-    clearTimeout(timer.current);
+    dialog.current.open();
+    clearInterval(timer.current);
   }
 
   return (
     <>
-      <ResultModal ref={dialog} targetTime={targetTime} result="lost" />
+      <ResultModal
+        ref={dialog}
+        targetTime={targetTime}
+        remainingTime={timeRemaining}
+        onReset={handleReset}
+      />
       <section className="challenge">
         <h2>{title}</h2>
         <p className="challenge-time">
           {targetTime} second{targetTime > 1 ? "s" : ""}
         </p>
         <p>
-          <button onClick={timerStarted ? handleStop : handleStart}>
-            {timerStarted ? "Stop" : "Start"} Challenge
+          <button onClick={timerIsActive ? handleStop : handleStart}>
+            {timerIsActive ? "Stop" : "Start"} Challenge
           </button>
         </p>
-        <p className={timerStarted ? "active" : undefined}>
-          {timerStarted ? "Timer is running..." : "Timer inactive"}
+        <p className={timerIsActive ? "active" : undefined}>
+          {timerIsActive ? "Timer is running..." : "Timer inactive"}
         </p>
       </section>
     </>
